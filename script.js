@@ -21,33 +21,33 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     function updateUI() {
-        if (user) {
-            todoContainer.style.display = "block"; // ✅ Show to-do list when logged in
+        if (typeof user === "undefined" || user === null) {
+            todoContainer.style.display = "none";  // ✅ Prevents "user is undefined" error
         } else {
-            todoContainer.style.display = "none";  // ✅ Hide to-do list when logged out
+            todoContainer.style.display = "block";
         }
     }
     
 
     async function checkUser() {
+        user = null; // ✅ Always define user before running any logic
+    
         const { data, error } = await supabaseClient.auth.getSession();
-        
         if (error) {
             console.error("Error checking session:", error);
-            user = null;  // ✅ Explicitly set user to null
-            updateUI();   // ✅ Call updateUI() only after user is set
+            updateUI();  // ✅ Ensure UI updates even if there's an error
             return;
         }
     
         if (data.session) {
-            user = data.session.user;  // ✅ Ensure user is assigned before calling updateUI()
+            user = data.session.user;
             await loadTasks(user.id);
-        } else {
-            user = null;  // ✅ Explicitly set to null if not logged in
         }
     
-        updateUI();  // ✅ Now it's safe to call updateUI()
+        updateUI(); // ✅ Now safe to call updateUI()
     }
+
+    await checkUser();
     
 
 
