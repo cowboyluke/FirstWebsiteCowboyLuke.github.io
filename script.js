@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     const loginButton = document.getElementById("login-button");
     const logoutButton = document.getElementById("logout-button");
     const todoContainer = document.querySelector(".todo-container"); // Container for tasks
+    let user = null;
 
     if (data.session) {
         user = data.session.user; // ✅ Corrected
@@ -19,28 +20,32 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     function updateUI() {
         if (user) {
-            todoContainer.style.display = "block"; // Show to-do list
+            todoContainer.style.display = "block"; // ✅ Show to-do list when logged in
         } else {
-            todoContainer.style.display = "none"; // Hide to-do list
+            todoContainer.style.display = "none";  // ✅ Hide to-do list when logged out
         }
     }
+    
 
     async function checkUser() {
-        const { data, error } = await supabaseClient.auth.getSession();
-        if (error) {
-            console.error("Error checking session:", error);
-            return null;
-        }
+    const { data, error } = await supabaseClient.auth.getSession();
     
-        if (data.session) {
-            user = data.session.user;
-            loadTasks(user.id);
-            return user;
-        }
-    
-        updateUI();
+    if (error) {
+        console.error("Error checking session:", error);
         return null;
     }
+
+    if (data.session) {
+        user = data.session.user;  // ✅ Assign user before calling updateUI()
+        loadTasks(user.id);
+    } else {
+        user = null;  // ✅ Ensure user is explicitly set to null
+    }
+
+    updateUI();  // ✅ Now it's safe to call updateUI()
+    return user;
+}
+
 
     loginButton.addEventListener("click", async () => {
         const email = prompt("Enter email:");
