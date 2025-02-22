@@ -2,6 +2,7 @@ const { createClient } = window.supabase;
 const SUPABASE_URL = "https://vjhvmqdjrrkzmipmpzlw.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqaHZtcWRqcnJrem1pcG1wemx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU4NjQwOTMsImV4cCI6MjA1MTQ0MDA5M30.KeHronGAYRKkWndK1Iv9X5YD8l-uRkl-Llj6jg1lwd4";
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let user = null; // ✅ Initialize user as null
 
 document.addEventListener("DOMContentLoaded", async function () {
     const taskInput = document.getElementById("task-input");
@@ -10,7 +11,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     const loginButton = document.getElementById("login-button");
     const logoutButton = document.getElementById("logout-button");
     const todoContainer = document.querySelector(".todo-container"); // Container for tasks
-    let user = null;
+
 
     if (data.session) {
         user = data.session.user; // ✅ Corrected
@@ -28,23 +29,25 @@ document.addEventListener("DOMContentLoaded", async function () {
     
 
     async function checkUser() {
-    const { data, error } = await supabaseClient.auth.getSession();
+        const { data, error } = await supabaseClient.auth.getSession();
+        
+        if (error) {
+            console.error("Error checking session:", error);
+            user = null;  // ✅ Explicitly set user to null
+            updateUI();   // ✅ Call updateUI() only after user is set
+            return;
+        }
     
-    if (error) {
-        console.error("Error checking session:", error);
-        return null;
+        if (data.session) {
+            user = data.session.user;  // ✅ Ensure user is assigned before calling updateUI()
+            await loadTasks(user.id);
+        } else {
+            user = null;  // ✅ Explicitly set to null if not logged in
+        }
+    
+        updateUI();  // ✅ Now it's safe to call updateUI()
     }
-
-    if (data.session) {
-        user = data.session.user;  // ✅ Assign user before calling updateUI()
-        loadTasks(user.id);
-    } else {
-        user = null;  // ✅ Ensure user is explicitly set to null
-    }
-
-    updateUI();  // ✅ Now it's safe to call updateUI()
-    return user;
-}
+    
 
 
     loginButton.addEventListener("click", async () => {
