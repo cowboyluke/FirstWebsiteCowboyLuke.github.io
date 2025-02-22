@@ -9,50 +9,66 @@ document.addEventListener("DOMContentLoaded", async function () {
     const taskList = document.getElementById("task-list");
     const loginButton = document.getElementById("login-button");
     const logoutButton = document.getElementById("logout-button");
-    
-    let user = await checkUser();
+    const todoContainer = document.querySelector(".todo-container"); // Container for tasks
 
-    // Check if user is logged in
+    let user = await checkUser(); // Check if user is logged in on page load
+
+    function updateUI() {
+        if (user) {
+            todoContainer.style.display = "block"; // Show to-do list
+        } else {
+            todoContainer.style.display = "none"; // Hide to-do list
+        }
+    }
+
     async function checkUser() {
         const { data: { user } } = await supabaseClient.auth.getUser();
         if (user) {
             loadTasks(user.id);
             return user;
         }
+        updateUI(); // Hide list if no user
         return null;
     }
 
-    // Sign In (for demo, uses a hardcoded email/password)
     loginButton.addEventListener("click", async () => {
-        const { error, data } = await supabaseClient.auth.signInWithPassword({
-            email: "user@example.com",
-            password: "password123",
+        const email = prompt("Enter email:");
+        const password = prompt("Enter password:");
+
+        if (!email || !password) return alert("Email and password required!");
+
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email,
+            password
         });
+
         if (error) {
-            alert("Login failed");
+            alert("Login failed: " + error.message);
         } else {
-            user = data.user;
+            user = data.user; // Fix: user data comes from `data.session`
+            updateUI();
             loadTasks(user.id);
         }
     });
 
-    // Logout
     logoutButton.addEventListener("click", async () => {
         await supabaseClient.auth.signOut();
         taskList.innerHTML = "";
         user = null;
+        updateUI();
     });
 
-    // Load Tasks from Supabase
     async function loadTasks(userId) {
         const { data: tasks, error } = await supabaseClient.from("todos").select("*").eq("user_id", userId);
-        if (tasks) {
-            taskList.innerHTML = "";
-            tasks.forEach(task => displayTask(task));
+        if (error) {
+            console.error("Error fetching tasks:", error);
+            return;
         }
+
+        taskList.innerHTML = ""; // Clear list before adding new tasks
+        tasks.forEach(task => displayTask(task));
     }
 
-    // Add Task
     addTaskButton.addEventListener("click", async function () {
         if (!user) return alert("Please log in first!");
 
@@ -63,7 +79,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             user_id: user.id, 
             task: taskText, 
             completed: false 
-        }]);
+        }]).select();
 
         if (!error) {
             displayTask(data[0]);
@@ -71,7 +87,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     });
 
-    // Display Task
     function displayTask(task) {
         const taskItem = document.createElement("li");
         taskItem.textContent = task.task;
@@ -88,5 +103,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         taskItem.appendChild(deleteButton);
         taskList.appendChild(taskItem);
     }
-});
 
+    updateUI(); // Run UI update on load
+});
