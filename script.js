@@ -1,4 +1,4 @@
-const { createClient } = supabase;
+const { createClient } = window.supabase;
 const SUPABASE_URL = "https://vjhvmqdjrrkzmipmpzlw.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqaHZtcWRqcnJrem1pcG1wemx3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU4NjQwOTMsImV4cCI6MjA1MTQ0MDA5M30.KeHronGAYRKkWndK1Iv9X5YD8l-uRkl-Llj6jg1lwd4";
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         updateUI();
         loadTasks(user.id);
     }
-    
+
     function updateUI() {
         if (user) {
             todoContainer.style.display = "block"; // Show to-do list
