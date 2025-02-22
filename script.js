@@ -11,8 +11,12 @@ document.addEventListener("DOMContentLoaded", async function () {
     const logoutButton = document.getElementById("logout-button");
     const todoContainer = document.querySelector(".todo-container"); // Container for tasks
 
-    let user = await checkUser(); // Check if user is logged in on page load
-
+    if (data.session) {
+        user = data.session.user; // ✅ Corrected
+        updateUI();
+        loadTasks(user.id);
+    }
+    
     function updateUI() {
         if (user) {
             todoContainer.style.display = "block"; // Show to-do list
@@ -22,12 +26,19 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     async function checkUser() {
-        const { data: { user } } = await supabaseClient.auth.getUser();
-        if (user) {
+        const { data, error } = await supabaseClient.auth.getSession();
+        if (error) {
+            console.error("Error checking session:", error);
+            return null;
+        }
+    
+        if (data.session) {
+            user = data.session.user;
             loadTasks(user.id);
             return user;
         }
-        updateUI(); // Hide list if no user
+    
+        updateUI();
         return null;
     }
 
